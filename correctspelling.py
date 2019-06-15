@@ -28,7 +28,6 @@ def load_dictionary(dictionary_path, max_edit_distance_dictionary = 3, prefix_le
 def get_correction(sym_spell, input_term, max_edit_distance_lookup = 2):
     # max edit distance per lookup
     # (max_edit_distance_lookup <= max_edit_distance_dictionary)
-    max_edit_distance_lookup = 2
     suggestion_verbosity = Verbosity.CLOSEST  # TOP, CLOSEST, ALL
     suggestions = sym_spell.lookup(input_term, suggestion_verbosity, max_edit_distance_lookup)
         
@@ -44,3 +43,21 @@ symspell = load_dictionary(dict_file_path)
     
 get_correction(symspell, input_term)
 
+
+
+# NOTE: We get an order-of magnitude speed up on correctly spelled words by 
+# first checking if the word is in our `sym_spell._words` dictionary
+def get_correction2(sym_spell, input_term, max_edit_distance_lookup = 2):
+    # max edit distance per lookup
+    # (max_edit_distance_lookup <= max_edit_distance_dictionary)
+    if input_term in sym_spell._words:
+        return input_term
+
+    suggestion_verbosity = Verbosity.CLOSEST  # TOP, CLOSEST, ALL
+    suggestions = sym_spell.lookup(input_term, suggestion_verbosity, max_edit_distance_lookup)
+
+    # display suggestion term, term frequency, and edit distance
+    # for suggestion in suggestions:
+    #     print("{}, {}, {}".format(suggestion.term, suggestion.distance, suggestion.count))
+    #     
+    return suggestions[0].term
