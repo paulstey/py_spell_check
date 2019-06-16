@@ -3,14 +3,17 @@ import pandas as pd
 
 from symspellpy.symspellpy import SymSpell, Verbosity  # import the module
 
+DICT_FILE_PATH = "/Users/pstey/software/resources/python/frequency_dictionary_en_82_765.txt"
+
+
+
 ## maximum edit distance per dictionary precalculation
 #   max_edit_distance_dictionary = 2
 #   prefix_length = 7
 
 # Example dict file 
-# dict_file_path = os.path.join(os.path.dirname(__file__), "frequency_dictionary_en_82_765.txt")
+# DICT_FILE_PATH = os.path.join(os.path.dirname(__file__), "frequency_dictionary_en_82_765.txt")
 
-dict_file_path = "/Users/pstey/software/resources/python/frequency_dictionary_en_82_765.txt"
 
 def load_dictionary(dictionary_path, max_edit_distance_dictionary = 3, prefix_length = 7):
 
@@ -26,11 +29,11 @@ def load_dictionary(dictionary_path, max_edit_distance_dictionary = 3, prefix_le
     return sym_spell
 
 
-def get_correction(sym_spell, input_term, max_edit_distance_lookup = 2):
+def get_correction(sym_spell, input_str, max_edit_distance_lookup = 3):
     # max edit distance per lookup
     # (max_edit_distance_lookup <= max_edit_distance_dictionary)
     suggestion_verbosity = Verbosity.CLOSEST  # TOP, CLOSEST, ALL
-    suggestions = sym_spell.lookup(input_term, suggestion_verbosity, max_edit_distance_lookup)
+    suggestions = sym_spell.lookup(input_str, suggestion_verbosity, max_edit_distance_lookup)
         
         # display suggestion term, term frequency, and edit distance
     # for suggestion in suggestions:
@@ -38,34 +41,34 @@ def get_correction(sym_spell, input_term, max_edit_distance_lookup = 2):
     #     
     return suggestions[0].term
 
-input_term = "wordingg"
+input_str = "wordingg"
 
-symspell = load_dictionary(dict_file_path)
+symspell = load_dictionary(DICT_FILE_PATH)
     
-get_correction(symspell, input_term)
+get_correction(symspell, input_str)
 
 
 
 # NOTE: We get an order-of magnitude speed up on correctly spelled words by 
 # first checking if the word is in our `sym_spell._words` dictionary
-def auto_correct(sym_spell, input_term, max_edit_distance_lookup = 2, compound = True):
+def auto_correct(sym_spell, input_str, max_edit_distance_lookup = 3):
     # max edit distance per lookup
     # (max_edit_distance_lookup <= max_edit_distance_dictionary)
-    if input_term in sym_spell._words:
-        return input_term
 
-    suggestion_verbosity = Verbosity.CLOSEST  # TOP, CLOSEST, ALL
-    
-    if not compound:
-        suggestions = sym_spell.lookup(input_term, suggestion_verbosity, max_edit_distance_lookup)
+    if " " not in input_str:
+        if input_str in sym_spell._words:
+            return input_str
+
+        suggestion_verbosity = Verbosity.CLOSEST  # TOP, CLOSEST, ALL
+        suggestions = sym_spell.lookup(input_str, suggestion_verbosity, max_edit_distance_lookup)
     else:
-        suggestions = sym_spell.lookup_compound(input_term, max_edit_distance_lookup)
+        suggestions = sym_spell.lookup_compound(input_str, max_edit_distance_lookup)
     
     # display suggestion term, term frequency, and edit distance
     # for suggestion in suggestions:
     #     print("{}, {}, {}".format(suggestion.term, suggestion.distance, suggestion.count))
     correction = suggestions[0].term
-    print("Correct `{}` to `{}`".format(input_term, correction))
+    # print("Correct `{}` to `{}`".format(input_str, correction))
     
     return correction
     
@@ -80,8 +83,8 @@ def auto_correct_columns(sym_spell, df, cols):
 
     
     
-df = pd.DataFrame({"x1": ["this is a cell", "adn this also", "and this tooo"],
-                   "x2": ["the words that aer", "in this isn't", "very complexx"]})
+df = pd.DataFrame({"x1": ["this is a cell", "adn this also", "and this tooo", "yep, here alos"],
+                   "x2": ["the words that aer", "in this isn't", "very complexx", "krunchy"]})
                    
 auto_correct_columns(symspell, df, ["x1", "x2"])
 
